@@ -1,0 +1,92 @@
+
+@register.route('/signup', methods=['POST'])
+def signup():
+    # Extract the required data from the request JSON
+    firstname = request.json['firstname'].capitalize()
+    lastname = request.json['lastname'].capitalize()
+    email = request.json['email']
+    password = request.json['password']
+    
+    # Check if the firstname and lastname contain only Latin letters
+    if only_letters(firstname) and only_letters(lastname):
+        return jsonify({"error": "first and lastname must be only Latin letters"})
+    
+    # Validate the email format
+    if not validators.email(email):
+        return jsonify({"error": "email is not valid"}), HTTP_400_BAD_REQUEST
+    
+    # Validate the password
+    if password:
+        error_details = []
+        if len(password) < 10:
+            error_details.append("The password must be at least 10 characters long")
+        if not any(char.isupper() for char in password):
+            error_details.append("The password must contain at least one uppercase letter")
+        if not any(char.islower() for char in password):
+            error_details.append("The password must contain at least one lowercase letter")
+        if not any(char.isdigit() for char in password):
+            error_details.append("The password must contain at least one number")
+        if error_details:
+            return jsonify({
+                "error": "Invalid password",
+                "details": error_details
+            }), HTTP_400_BAD_REQUEST
+    else:
+        return jsonify({'message':'please enter a password'})
+    
+    # Generate a password hash
+    psw_hash = generate_password_hash(password)
+    
+    # Return the user data with the hashed password and role as "Teacher"
+    return jsonify(
+        {
+            "firstname": firstname,
+            "lastname": lastname,
+            "email": email,
+            "password": "*" * len(password),
+            "role": "Teacher"
+        }
+    ), HTTP_201_CREATED
+
+# Route to signup a user who is a parent
+@register.route('/signup/parent', methods=['POST'])
+def signup_parent():
+    # Extract the required data from the request JSON
+    firstname = request.json['firstname'].capitalize()
+    lastname = request.json['lastname'].capitalize()
+    email = request.json['email']
+    password = request.json['password']
+    
+    # Validate the password
+    if password:
+        error_details = []
+        if len(password) < 10:
+            error_details.append("The password must be at least 10 characters long")
+        if not any(char.isupper() for char in password):
+            error_details.append("The password must contain at least one uppercase letter")
+        if not any(char.islower() for char in password):
+            error_details.append("The password must contain at least one lowercase letter")
+        if not any(char.isdigit() for char in password):
+            error_details.append("The password must contain at least one number")
+
+        if error_details:
+            return jsonify({
+                "error": "Invalid password",
+                "details": error_details
+            }), HTTP_400_BAD_REQUEST
+    else:
+        return jsonify({'message':'please enter a password'})
+    
+    # Validate the email format
+    if not validators.email(email):
+        return jsonify({"error": "email is not valid"}), HTTP_400_BAD_REQUEST
+    
+    # Generate a password hash
+    psw_hash = generate_password_hash(password)
+    
+    # commit to db
+    
+    # send an email to validate and set up a profile for the user
+    
+    # Return the user data with the hashed password and role as "Parent"
+    return jsonify({'message':'please check your email to complete your registration'}), HTTP_201_CREATED
